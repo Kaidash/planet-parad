@@ -4,12 +4,12 @@ import * as THREE from 'three';
 
 import './OrbitControls'
 /*
-import './EffectComposer'
-import './ShaderPass'
-import './CopyShader'
-import './FilmShader'
-import './FilmPass'
-*/
+ import './EffectComposer'
+ import './ShaderPass'
+ import './CopyShader'
+ import './FilmShader'
+ import './FilmPass'
+ */
 import React3 from 'react-three-renderer'
 
 
@@ -23,15 +23,20 @@ class Planet extends React.Component {
         this.state = {
             marsRotation: new THREE.Euler(0, 0),
             redRotation: new THREE.Euler(0, 0),
+            yurikusRotation: new THREE.Euler(0, 0),
+            yellowRotation: new THREE.Euler(0, 0),
+            magicRotation: new THREE.Euler(0, 0),
             light: {
                 direction: new THREE.Vector3(0, 0, 0),
                 position: new THREE.Vector3(0, 0, 450)
             },
             position: {
-                camera: new THREE.Vector3(0, 0, 980),
-                mars: new THREE.Vector3(0, 0, 0),
-                red: new THREE.Vector3(0, 202, -101),
-                backGlow: new THREE.Vector3(0, 15, -1400 )
+                camera: new THREE.Vector3(0, 0, 6000),
+                mars: new THREE.Vector3(300, -150, 0),
+                red: new THREE.Vector3(0, 0, -10000),
+                yellow: new THREE.Vector3(200, 0, -5000),
+                yurikus: new THREE.Vector3(400, 15, 2100),
+                magic: new THREE.Vector3(400, 15, 5100)
             },
             glowOffset: new THREE.Vector2(0, 0.074),
             rtParameters: {
@@ -57,9 +62,9 @@ class Planet extends React.Component {
 //             });
 // //            this.composer.render(0.1);
 //         };
-  //       this._onRendererUpdated = (renderer)=>{
-  // //          this.composer = new THREE.EffectComposer( renderer, new THREE.WebGLRenderTarget( window.innerWidth, window.innerHeight, this.state.rtParameters ) );
-  //       };
+        //       this._onRendererUpdated = (renderer)=>{
+        // //          this.composer = new THREE.EffectComposer( renderer, new THREE.WebGLRenderTarget( window.innerWidth, window.innerHeight, this.state.rtParameters ) );
+        //       };
 
     }
     componentDidMount(){
@@ -79,8 +84,8 @@ class Planet extends React.Component {
 
         //composer.addPass(effectFilm);
         //composer.render(0.1);
-         camera.add(light);
-         light.position.copy(state.position.camera);
+        camera.add(light);
+        light.position.copy(state.position.camera);
     }
 
     render() {
@@ -88,64 +93,116 @@ class Planet extends React.Component {
         const height = window.innerHeight; // canvas height
 
         return (<React3
-            mainCamera="camera" // this points to the perspectiveCamera which has the name set to "camera" below
-            width={width}
-            height={height}
-            gammaInput={true}
-            gammaOutput={true}
-            alpha={true}
-            pixelRatio={window.devicePixelRatio}
-            onAnimate={this._onAnimate}
-            onRendererUpdated={this._onRendererUpdated}
-            ref="rendererNode"
-        >
+        mainCamera="camera" // this points to the perspectiveCamera which has the name set to "camera" below
+        width={width}
+        height={height}
+        gammaInput={true}
+        gammaOutput={true}
+        alpha={true}
+        pixelRatio={window.devicePixelRatio}
+        onAnimate={this._onAnimate}
+        onRendererUpdated={this._onRendererUpdated}
+        ref="rendererNode"
+            >
             <scene ref="screne">
-                <perspectiveCamera
-                    ref="camera"
-                    name="camera"
-                    aspect={width / height}
-                    near={1}
-                    fov={45}
-                    far={10000}
-                    position={this.state.position.camera}
-                />
-                <ambientLight ref="light" color={0x333333} intensity={1} />
+            <perspectiveCamera
+        ref="camera"
+        name="camera"
+        aspect={width / height}
+        near={1}
+        fov={45}
+        far={100000}
+        position={this.state.position.camera}
+    />
+    <ambientLight ref="light" color={0x333333} intensity={1} />
 
-                <mesh
-                    rotation={this.state.marsRotation}
-                    position={this.state.position.mars}
-                >
-                    <planeGeometry
-                        width={800}
-                        height={800}
-                    />
 
-                    <meshPhongMaterial
-                        bumpScale={0}
-                        shininess={3}
-                    >
-                        <texture url={'mars.png'} />
-                    </meshPhongMaterial>
-                </mesh>
-                <mesh
-                    rotation={this.state.redRotation}
-                    position={this.state.position.red}
-                >
-                    <planeGeometry
-                        width={800}
-                        height={800}
-                    />
+            <mesh
+        rotation={this.state.redRotation}
+        position={this.state.position.red}
+    >
+    <circleGeometry
+        radius={251}
+        segments={101}
+            />
 
-                    <meshPhongMaterial
-                        bumpScale={0}
-                        shininess={3}
-                    >
-                        <texture url={'red.png'} />
-                    </meshPhongMaterial>
-                </mesh>
+            <meshPhongMaterial
+        bumpScale={0}
+        shininess={3}
+            >
+            <texture url={'red.png'} />
+            </meshPhongMaterial>
+            </mesh>
+
+            <mesh
+        rotation={this.state.yellowRotation}
+        position={this.state.position.yellow}
+    >
+    <circleGeometry
+        radius={251}
+        segments={101}
+            />
+
+            <meshPhongMaterial
+        bumpScale={0}
+        shininess={3}
+            >
+            <texture url={'yellow.png'} />
+            </meshPhongMaterial>
+            </mesh>
+
+            <mesh
+        rotation={this.state.marsRotation}
+        position={this.state.position.mars}
+    >
+    <circleGeometry
+        radius={250}
+        segments={100}
+            />
+
+            <meshPhongMaterial
+        bumpScale={0}
+        shininess={3}
+            >
+            <texture url={'mars.png'} />
+            </meshPhongMaterial>
+            </mesh>
+            <mesh
+        rotation={this.state.yurikusRotation}
+        position={this.state.position.yurikus}
+    >
+    <circleGeometry
+        radius={251}
+        segments={101}
+            />
+
+            <meshPhongMaterial
+        bumpScale={0}
+        shininess={3}
+            >
+            <texture url={'yurikus.png'} />
+            </meshPhongMaterial>
+            </mesh>
+
+            <mesh
+        rotation={this.state.magicRotation}
+        position={this.state.position.magic}
+    >
+    <circleGeometry
+        radius={251}
+        segments={101}
+            />
+
+            <meshPhongMaterial
+        bumpScale={0}
+        shininess={3}
+            >
+            <texture url={'magic.png'} />
+            </meshPhongMaterial>
+            </mesh>
 
             </scene>
-        </React3>);
+            </React3>);
     }
 }
 
