@@ -25,56 +25,67 @@ class Planet extends React.Component {
     // p -> p = 10000
     // cd = 12000
 
+    // Distance
     _renderDistance = 100000;
-    _planetToPlanetDistance = 10000;
-    _cameraToPlanetDistance = 500;
+    _planetToPlanetDistance = 50000;
+    _cameraToPlanetDistance = 750;
+
+    // Offset
+    _xOffset = 400;
+    _yOffset = -200;
 
     _planetsCount = 5;
 
-    _distance = 10000;
     _currentPlanet = 0;
 
-    _currentPosX = -75;
+    // Need for moving
+    _currentPosX;
+    _currentPosY;
+    _currentPosZ;
 
-    _nextPosZ = 40500;
-    _currentPosZ = 40500;
-    _frame = 100;
+    _nextPosX;
+    _nextPosY;
+    _nextPosZ;
+
+    _direction;
 
     _moving = false;
-
     _arg = 0;
-    _direction = 1;
-
-    /*
-    * props = {
-    *   planets: [
-    *       { x: 0, y: 0, z: 0 },
-    *       { x: 0, y: 0, z: 0 },
-    *       { x: 0, y: 0, z: 0 },
-    *       { x: 0, y: 0, z: 0 }
-    *   ]
-    * }
-    * */
 
     constructor(props, context) {
         super(props, context);
 
         this._planetsCount = planets.length;
-        this._renderDistance = this._planetsCount * this._planetToPlanetDistance + this._cameraToPlanetDistance;
+        this._renderDistance = this._planetsCount * this._planetToPlanetDistance / 2;
+        this._currentPosZ = this._planetsCount * this._planetToPlanetDistance + this._cameraToPlanetDistance - this._planetToPlanetDistance;
+        this._currentPlanet = this._planetsCount - 1;
+
+        // Planet Cords
+        this._calculatePlanetXCord = this._calculatePlanetXCord.bind(this);
+        this._calculatePlanetYCord = this._calculatePlanetYCord.bind(this);
+        this._calculatePlanetZCord = this._calculatePlanetZCord.bind(this);
 
         let _planets = planets.map( (planet, index) => {
             return {
-                cords: new THREE.Vector3(75 * index, -50 * index, index * this._planetToPlanetDistance),
+                cords: new THREE.Vector3(
+                    this._calculatePlanetXCord( index ),
+                    this._calculatePlanetYCord( index ),
+                    this._calculatePlanetZCord( index )
+                ),
                 texture: planet + '.png'
             }
         });
+
+        this._nextPosX = this._calculatePlanetXCord( this._planetsCount - 1 ) - this._xOffset;
+        this._nextPosY = this._calculatePlanetYCord( this._planetsCount - 1 ) - this._yOffset;
+        this._nextPosZ = this._calculatePlanetZCord( this._planetsCount - 1 ) + this._cameraToPlanetDistance;
 
         this.handleMouseWheel = this.handleMouseWheel.bind(this);
         this._onAnimate = this._onAnimate.bind(this);
         this._canMove = this._canMove.bind(this);
         this._getSpeedCofficient = this._getSpeedCofficient.bind(this);
-        this._getZCords = this._getZCords.bind(this);
-        this._getXCords = this._getXCords.bind(this);
+        this._getCurrentCord = this._getCurrentCord.bind(this);
+        this._setNextCords = this._setNextCords.bind(this);
 
         this.state = {
             light: {
@@ -82,7 +93,7 @@ class Planet extends React.Component {
                 position: new THREE.Vector3(0, 0, 450)
             },
             position: {
-                camera: new THREE.Vector3(0, 0, 40500),
+                camera: new THREE.Vector3(0, 0, this._currentPosZ),
             },
 
             planets: _planets,
@@ -103,17 +114,26 @@ class Planet extends React.Component {
         const mainNode = ReactDOM.findDOMNode(rendererNode);
         mainNode.addEventListener( 'wheel', this.handleMouseWheel, false );
 
-        /*orbit = new THREE.OrbitControls( camera, ReactDOM.findDOMNode(rendererNode) );
-        // effectFilm = new THREE.FilmPass( 0.35, 0.025, 648, false );
-
-        orbit.enableZoom = true;
-        orbit.enablePan=false;
-        orbit.enableRotate=false;*/
-
         camera.add(glow, backGlow);
 
         camera.add(light);
         light.position.copy(this.state.position.camera);
+    }
+
+    /*
+     * Cords Calculators
+     * */
+
+    _calculatePlanetXCord( index ) {
+        return this._xOffset - 250 * Math.pow(this._planetsCount - index - 1, 3)
+    }
+
+    _calculatePlanetYCord( index ) {
+        return this._yOffset - 500 * -Math.pow(this._planetsCount - index - 1, 3)
+    }
+
+    _calculatePlanetZCord( index ) {
+        return index * this._planetToPlanetDistance
     }
 
     // handlers
@@ -128,9 +148,16 @@ class Planet extends React.Component {
             if( !this._canMove( direction ) ) return;
 
             this._direction = direction;
+
+            this._currentPosX = this._calculatePlanetXCord( this._currentPlanet ) - this._xOffset;
+            this._currentPosY = this._calculatePlanetYCord( this._currentPlanet ) - this._yOffset;
+            this._currentPosZ = this._calculatePlanetZCord( this._currentPlanet ) + this._cameraToPlanetDistance;
+
             this._currentPlanet -= direction;
-            this._nextPosZ += direction * this._distance;
-            this._frame = direction * 100;
+
+            this._nextPosX = this._calculatePlanetXCord( this._currentPlanet ) - this._xOffset;
+            this._nextPosY = this._calculatePlanetYCord( this._currentPlanet ) - this._yOffset;
+            this._nextPosZ = this._calculatePlanetZCord( this._currentPlanet ) + this._cameraToPlanetDistance;
         }
     }
 
@@ -142,17 +169,15 @@ class Planet extends React.Component {
         let camera = this.refs.camera;
 
         if( camera.position.z != this._nextPosZ && this._arg < 40 ) {
-
-            camera.position.x = this._getXCords();
-            camera.position.z = this._getZCords();
+            this._setNextCords( camera );
         }
         else {
             this._arg = 0;
 
-            camera.position.x = -75 * this._currentPlanet;
+            camera.position.x = this._nextPosX;
+            camera.position.y = this._nextPosY;
             camera.position.z = this._nextPosZ;
 
-            this._currentPosZ = this._nextPosZ;
             this._moving = false;
         }
     }
@@ -161,14 +186,18 @@ class Planet extends React.Component {
         return ( Math.atan( this._arg - 20 ) + 1.5208 ) / 3.0416
     }
 
-    _getZCords() {
-        this._arg += 0.4;
+    _setNextCords( camera ) {
+        this._arg += 0.25;
 
-        return this._currentPosZ + this._distance * this._getSpeedCofficient() * this._direction
+        camera.position.x = this._getCurrentCord( this._currentPosX, this._nextPosX );
+        camera.position.y = this._getCurrentCord( this._currentPosY, this._nextPosY );
+        camera.position.z = this._getCurrentCord( this._currentPosZ, this._nextPosZ );
+
+        camera.updateProjectionMatrix();
     }
 
-    _getXCords( ) {
-        return -75 * (this._currentPlanet + this._direction) + 75 * this._getSpeedCofficient() * this._direction
+    _getCurrentCord(current, next) {
+        return current + ( next - current ) * this._getSpeedCofficient()
     }
 
     render() {
