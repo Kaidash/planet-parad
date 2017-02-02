@@ -10,7 +10,8 @@ import * as THREE from 'three';
  import './FilmShader'
  import './FilmPass'
  */
-import React3 from 'react-three-renderer'
+import React3 from 'react-three-renderer';
+import { findTHREEObject } from 'react-three-renderer/lib/React3Renderer';
 
 const planets = [
     "red",
@@ -27,12 +28,14 @@ class Planet extends React.Component {
 
     // Distance
     _renderDistance = 100000;
-    _planetToPlanetDistance = 50000;
+    _planetToPlanetDistance = 5000;
     _cameraToPlanetDistance = 750;
+
+    _planetRadius = 251;
 
     // Offset
     _xOffset = 400;
-    _yOffset = -200;
+    _yOffset = -300;
 
     _planetsCount = 5;
 
@@ -72,6 +75,7 @@ class Planet extends React.Component {
                     this._calculatePlanetYCord( index ),
                     this._calculatePlanetZCord( index )
                 ),
+                radius: index < this._planetsCount - 2 ? 1 : this._planetRadius,
                 texture: planet + '.png'
             }
         });
@@ -86,6 +90,7 @@ class Planet extends React.Component {
         this._getSpeedCofficient = this._getSpeedCofficient.bind(this);
         this._getCurrentCord = this._getCurrentCord.bind(this);
         this._setNextCords = this._setNextCords.bind(this);
+        this._getScale = this._getScale.bind(this);
 
         this.state = {
             light: {
@@ -125,11 +130,11 @@ class Planet extends React.Component {
      * */
 
     _calculatePlanetXCord( index ) {
-        return this._xOffset - 250 * Math.pow(this._planetsCount - index - 1, 3)
+        return this._xOffset - 300 * Math.pow(this._planetsCount - index - 1, 1.5)
     }
 
     _calculatePlanetYCord( index ) {
-        return this._yOffset - 500 * -Math.pow(this._planetsCount - index - 1, 3)
+        return this._yOffset + 500 * Math.pow(this._planetsCount - index - 1, 1.5)
     }
 
     _calculatePlanetZCord( index ) {
@@ -178,6 +183,11 @@ class Planet extends React.Component {
             camera.position.y = this._nextPosY;
             camera.position.z = this._nextPosZ;
 
+            if ( this._currentPlanet > 0 && this._direction == 1 || this._direction == -1 && this._currentPlanet > 1 ) {
+                let newRad = this._direction == 1 ? this._planetRadius : 1;
+                React3.findTHREEObject(this.refs[ `planet${ this._currentPlanet - (this._direction == 1 ? 1 : 2)}` ]).scale.set( newRad, newRad, newRad );
+            }
+
             this._moving = false;
         }
     }
@@ -193,11 +203,25 @@ class Planet extends React.Component {
         camera.position.y = this._getCurrentCord( this._currentPosY, this._nextPosY );
         camera.position.z = this._getCurrentCord( this._currentPosZ, this._nextPosZ );
 
+        if ( this._currentPlanet > 0 && this._direction == 1 || this._direction == -1 && this._currentPlanet > 1 ) {
+            console.log(this._direction);
+            console.log(this._currentPlanet);
+            console.log(this._currentPlanet - (this._direction == 1 ? 1 : 2));
+            let newRad = this._getScale();
+            React3.findTHREEObject(this.refs[ `planet${ this._currentPlanet - (this._direction == 1 ? 1 : 2)}` ]).scale.set( newRad, newRad, newRad );
+        }
+
         camera.updateProjectionMatrix();
     }
 
     _getCurrentCord(current, next) {
         return current + ( next - current ) * this._getSpeedCofficient()
+    }
+
+    _getScale() {
+        return this._direction == 1 ?
+               this._getSpeedCofficient() * this._planetRadius :
+               this._planetRadius - this._getSpeedCofficient() * this._planetRadius
     }
 
     render() {
@@ -232,11 +256,12 @@ class Planet extends React.Component {
                     { this.state.planets.map((planet, index) => {
                         return(
                             <mesh
+                                ref={ `planet${ index }` }
                                 key={ index }
                                 position={ planet.cords }
                             >
                                 <circleGeometry
-                                    radius={251}
+                                    radius={ planet.radius }
                                     segments={101}
                                 />
 
